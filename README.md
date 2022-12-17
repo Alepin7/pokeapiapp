@@ -1,0 +1,2 @@
+# pokeapiapp
+poke app paralelas
