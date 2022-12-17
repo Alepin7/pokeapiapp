@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import '../service/firebase_services.dart';
+
 typedef Accessor = Widget? Function(dynamic data);
 
 class Pokemon extends StatefulWidget {
@@ -86,16 +88,9 @@ class _PokemonState extends State<Pokemon> {
             ),
       };
 
-  bool _isFavorited = false;
-
-  void _toggleFavorited() {
-    setState(() {
-      _isFavorited = !_isFavorited;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
+    const mail = 't27rEkz1y82MKE4pHHZl';
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.name),
@@ -105,54 +100,79 @@ class _PokemonState extends State<Pokemon> {
         builder: (context, snapshot) {
           var pokemon = snapshot.data;
           if (snapshot.hasData) {
-            return ListView(
-              children: [
-                Center(
-                  child: Image.network(
-                    pokemon["sprites"]["front_default"],
-                    scale: 0.5,
-                  ),
-                ),
-                Container(
-                  margin: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: TextButton(
-                    child: Text(_isFavorited
-                        ? 'Quitar de favoritos'
-                        : 'Añadir a favoritos'),
-                    onPressed: _toggleFavorited,
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 28.0),
-                  child: DataTable(
-                    columns: const [
-                      DataColumn(
-                        label: Text("Atributos"),
+            return StreamBuilder<Json>(
+              stream: getUser(mail),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CircularProgressIndicator();
+                } else if (snapshot.hasError) {
+                  return const Text('Error');
+                }
+
+                final user = snapshot.data;
+                final pokemonName = pokemon["name"] as String;
+                final isFavorite =
+                    (user?["favorito"] as List?)?.contains(pokemonName) ??
+                        false;
+
+                return ListView(
+                  children: [
+                    Center(
+                      child: Image.network(
+                        pokemon["sprites"]["front_default"],
+                        scale: 0.5,
                       ),
-                      DataColumn(
-                        label: Text("Valor"),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: TextButton(
+                        onPressed: () async {
+                          if (isFavorite) {
+                            await removePokemonV(pokemonName);
+                            await removeUserV(mail, pokemonName);
+                          } else {
+                            await addPokemonV(pokemonName);
+                            await addUserV(mail, pokemonName);
+                          }
+                        },
+                        child: Text(isFavorite
+                            ? 'Quitar de favoritos'
+                            : 'Añadir a favoritos'),
                       ),
-                    ],
-                    rows: [
-                      for (final header in headers.entries)
-                        DataRow(
-                          cells: [
-                            DataCell(Text(header.key)),
-                            DataCell(
-                              header.value(pokemon) ??
-                                  const Text("No especificado"),
-                            ),
-                          ],
-                        )
-                    ],
-                  ),
-                ),
-              ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 28.0),
+                      child: DataTable(
+                        columns: const [
+                          DataColumn(
+                            label: Text("Atributos"),
+                          ),
+                          DataColumn(
+                            label: Text("Valor"),
+                          ),
+                        ],
+                        rows: [
+                          for (final header in headers.entries)
+                            DataRow(
+                              cells: [
+                                DataCell(Text(header.key)),
+                                DataCell(
+                                  header.value(pokemon) ??
+                                      const Text("No especificado"),
+                                ),
+                              ],
+                            )
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
             );
           } else if (snapshot.hasError) {
-            return Text("Error");
+            return const Text("Error");
           } else {
-            return CircularProgressIndicator();
+            return const CircularProgressIndicator();
           }
         },
       ),

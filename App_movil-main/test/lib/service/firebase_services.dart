@@ -1,6 +1,7 @@
 import "package:cloud_firestore/cloud_firestore.dart";
 
 FirebaseFirestore db = FirebaseFirestore.instance;
+typedef Json = Map<String, dynamic>;
 
 Future<List> getRank() async {
   List rank = [];
@@ -14,23 +15,39 @@ Future<List> getRank() async {
 }
 
 Future<void> addPokemonV(String name) async {
-  await db.collection('rank').add({"name": name, "votos": 1});
+  final voteRef = db.collection('rank').doc(name);
+  voteRef.update({"voto": FieldValue.increment(1)});
 }
 
-Future<Map> getUser(String mail) async {
-  Map user = {};
-  CollectionReference collectionReferenceUser = db.collection('user');
-  DocumentSnapshot documentSnapshot =
-      await collectionReferenceUser.document(mail).get();
-  if (documentSnapshot.exist) {
-    user = documentSnapshot.data;
+Future<void> removePokemonV(String name) async {
+  final voteRef = db.collection('rank').doc(name);
+  voteRef.update({"voto": FieldValue.increment(-1)});
+}
+
+Stream<Json> getUser(String mail) async* {
+  final collectionReferenceUser = db.collection('user');
+  final userRef = collectionReferenceUser.doc(mail);
+  await for (final doc in userRef.snapshots()) {
+    yield doc.data() as Json;
   }
-  return user;
 }
 
 Future<void> addUserV(String mail, String pokemon) async {
-  await db.collection('user').add({
-    "mail": mail,
-    "favoritos": {"pokemon": pokemon}
+  final userRef = db.collection('user').doc(mail);
+  final user = await userRef.get();
+  final favorites = user.data()?["favorito"] as List;
+  if (favorites.length > 3) {
+    return;
+  }
+
+  userRef.update({
+    "favorito": FieldValue.arrayUnion([pokemon])
+  });
+}
+
+Future<void> removeUserV(String mail, String pokemon) async {
+  final userRef = db.collection('user').doc(mail);
+  userRef.update({
+    "favorito": FieldValue.arrayRemove([pokemon])
   });
 }

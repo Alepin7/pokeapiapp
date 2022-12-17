@@ -23,20 +23,21 @@ class AuthorizationScreen extends StatelessWidget {
         controller.clearCache();
         CookieManager().clearCookies();
       },
-      navigationDelegate: (delegate) {
+      navigationDelegate: (delegate) async {
         final Uri responseUri = Uri.parse(delegate.url);
         final String path = responseUri.path;
         final bool ok = path.endsWith('/' + token + '/result');
         if (ok) {
-          VoterService.getJwt(token).then((value) => print(value));
+          final jwt = await VoterService.getJwt(token);
 
           Navigator.pop(context);
           Navigator.pushReplacement(
               context,
               MaterialPageRoute(
                   builder: (context) => ok
-                      ? const MyHomePage(
+                      ? MyHomePage(
                           title: "UTEM",
+                          jwt: jwt,
                         )
                       : const LoginScreen()));
         }
