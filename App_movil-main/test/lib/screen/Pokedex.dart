@@ -5,7 +5,8 @@ import 'dart:convert';
 import 'package:test/screen/pokemon.dart';
 
 class Pokedex extends StatefulWidget {
-  const Pokedex({super.key});
+  const Pokedex({super.key, required this.jwt});
+  final String jwt;
 
   @override
   State<Pokedex> createState() => _Pokedex();

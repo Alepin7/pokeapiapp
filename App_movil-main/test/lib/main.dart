@@ -30,15 +30,16 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Paralela pokeApi'),
+      home: const LoginScreen(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  const MyHomePage({super.key, required this.title, required this.jwt});
 
   final String title;
+  final String jwt;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -47,7 +48,14 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int currentIndex = 0;
   bool _auth = false;
-  final screens = [Profilepage(), Ranking(), Pokedex(), LoginScreen()];
+  List<Widget> get screens => [
+        Profilepage(),
+        Ranking(),
+        Pokedex(
+          jwt: widget.jwt,
+        ),
+        LoginScreen()
+      ];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
