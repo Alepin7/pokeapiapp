@@ -1,20 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:jwt_decode/jwt_decode.dart';
+
+import '../service/firebase_services.dart';
 
 typedef Accessor = Widget? Function(dynamic data);
 
 class Pokemon extends StatefulWidget {
   final String name;
   final String url;
+  final String jwt;
 
-  const Pokemon({super.key, required this.name, required this.url});
+  const Pokemon(
+      {super.key, required this.name, required this.url, required this.jwt});
 
   @override
   State<Pokemon> createState() => _PokemonState();
 }
 
 class _PokemonState extends State<Pokemon> {
+  Map<String, dynamic> get payload => Jwt.parseJwt(widget.jwt);
+  String get email => payload["email"];
+
   Future<dynamic> getPokemon(String url) async {
     // La URL de la Poke API que devuelve un listado de pokemon
 
@@ -86,14 +94,6 @@ class _PokemonState extends State<Pokemon> {
             ),
       };
 
-  bool _isFavorited = false;
-
-  void _toggleFavorited() {
-    setState(() {
-      _isFavorited = !_isFavorited;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -105,54 +105,81 @@ class _PokemonState extends State<Pokemon> {
         builder: (context, snapshot) {
           var pokemon = snapshot.data;
           if (snapshot.hasData) {
-            return ListView(
-              children: [
-                Center(
-                  child: Image.network(
-                    pokemon["sprites"]["front_default"],
-                    scale: 0.5,
-                  ),
-                ),
-                Container(
-                  margin: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: TextButton(
-                    child: Text(_isFavorited
-                        ? 'Quitar de favoritos'
-                        : 'Añadir a favoritos'),
-                    onPressed: _toggleFavorited,
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 28.0),
-                  child: DataTable(
-                    columns: const [
-                      DataColumn(
-                        label: Text("Atributos"),
+            return StreamBuilder<Json?>(
+              stream: getUser(email),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CircularProgressIndicator();
+                } else if (snapshot.hasError) {
+                  return const Text('Error');
+                }
+
+                final user = snapshot.data;
+                final pokemonName = pokemon["name"] as String;
+                final favorites = user?["favorito"] as List? ?? [];
+                final canFavorite = favorites.length < 3;
+                final isFavorite = favorites.contains(pokemonName);
+
+                return ListView(
+                  children: [
+                    Center(
+                      child: Image.network(
+                        pokemon["sprites"]["front_default"],
+                        scale: 0.5,
                       ),
-                      DataColumn(
-                        label: Text("Valor"),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: TextButton(
+                        onPressed: canFavorite || isFavorite
+                            ? () async {
+                                if (isFavorite) {
+                                  await removePokemonV(pokemonName);
+                                  await removeUserV(email, pokemonName);
+                                } else {
+                                  await addPokemonV(pokemonName);
+                                  await addUserV(email, pokemonName);
+                                }
+                              }
+                            : null,
+                        child: Text(isFavorite
+                            ? 'Quitar de favoritos (${favorites.length})'
+                            : 'Añadir a favoritos (${favorites.length})'),
                       ),
-                    ],
-                    rows: [
-                      for (final header in headers.entries)
-                        DataRow(
-                          cells: [
-                            DataCell(Text(header.key)),
-                            DataCell(
-                              header.value(pokemon) ??
-                                  const Text("No especificado"),
-                            ),
-                          ],
-                        )
-                    ],
-                  ),
-                ),
-              ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 28.0),
+                      child: DataTable(
+                        columns: const [
+                          DataColumn(
+                            label: Text("Atributos"),
+                          ),
+                          DataColumn(
+                            label: Text("Valor"),
+                          ),
+                        ],
+                        rows: [
+                          for (final header in headers.entries)
+                            DataRow(
+                              cells: [
+                                DataCell(Text(header.key)),
+                                DataCell(
+                                  header.value(pokemon) ??
+                                      const Text("No especificado"),
+                                ),
+                              ],
+                            )
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
             );
           } else if (snapshot.hasError) {
-            return Text("Error");
+            return const Text("Error");
           } else {
-            return CircularProgressIndicator();
+            return const CircularProgressIndicator();
           }
         },
       ),

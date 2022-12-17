@@ -13,6 +13,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -30,15 +32,16 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Paralela pokeApi'),
+      home: LoginScreen(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  const MyHomePage({super.key, required this.title, required this.jwt});
 
   final String title;
+  final String jwt;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -47,7 +50,13 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int currentIndex = 0;
   bool _auth = false;
-  final screens = [Profilepage(), Ranking(), Pokedex(), LoginScreen()];
+  List<Widget> get screens => [
+        Profilepage(),
+        Ranking(),
+        Pokedex(
+          jwt: widget.jwt,
+        )
+      ];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -70,18 +79,13 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.favorite),
-            label: 'Feed',
-            backgroundColor: Color.fromARGB(255, 243, 33, 33),
+            label: 'Ranking',
+            backgroundColor: Color.fromARGB(255, 223, 202, 15),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.chat),
+            icon: Icon(Icons.catching_pokemon),
             label: 'Pokedex',
-            backgroundColor: Color.fromARGB(255, 33, 243, 79),
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.login_sharp),
-            label: 'Login',
-            backgroundColor: Color.fromARGB(255, 205, 243, 33),
+            backgroundColor: Color.fromARGB(255, 218, 1, 1),
           ),
         ],
       ),
