@@ -55,8 +55,7 @@ class _MyHomePageState extends State<MyHomePage> {
         Ranking(),
         Pokedex(
           jwt: widget.jwt,
-        ),
-        LoginScreen()
+        )
       ];
   @override
   Widget build(BuildContext context) {
@@ -80,18 +79,13 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.favorite),
-            label: 'Feed',
-            backgroundColor: Color.fromARGB(255, 243, 33, 33),
+            label: 'Ranking',
+            backgroundColor: Color.fromARGB(255, 223, 202, 15),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.chat),
+            icon: Icon(Icons.catching_pokemon),
             label: 'Pokedex',
-            backgroundColor: Color.fromARGB(255, 33, 243, 79),
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.login_sharp),
-            label: 'Login',
-            backgroundColor: Color.fromARGB(255, 205, 243, 33),
+            backgroundColor: Color.fromARGB(255, 218, 1, 1),
           ),
         ],
       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:jwt_decode/jwt_decode.dart';
 
 import '../service/firebase_services.dart';
 
@@ -19,6 +20,9 @@ class Pokemon extends StatefulWidget {
 }
 
 class _PokemonState extends State<Pokemon> {
+  Map<String, dynamic> get payload => Jwt.parseJwt(widget.jwt);
+  String get email => payload["email"];
+
   Future<dynamic> getPokemon(String url) async {
     // La URL de la Poke API que devuelve un listado de pokemon
 
@@ -92,7 +96,6 @@ class _PokemonState extends State<Pokemon> {
 
   @override
   Widget build(BuildContext context) {
-    const mail = 't27rEkz1y82MKE4pHHZl';
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.name),
@@ -102,8 +105,8 @@ class _PokemonState extends State<Pokemon> {
         builder: (context, snapshot) {
           var pokemon = snapshot.data;
           if (snapshot.hasData) {
-            return StreamBuilder<Json>(
-              stream: getUser(mail),
+            return StreamBuilder<Json?>(
+              stream: getUser(email),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const CircularProgressIndicator();
@@ -113,9 +116,9 @@ class _PokemonState extends State<Pokemon> {
 
                 final user = snapshot.data;
                 final pokemonName = pokemon["name"] as String;
-                final favorites = user?["favorito"] as List?;
-                final canFavorite = favorites != null && favorites.length < 3;
-                final isFavorite = favorites?.contains(pokemonName) ?? false;
+                final favorites = user?["favorito"] as List? ?? [];
+                final canFavorite = favorites.length < 3;
+                final isFavorite = favorites.contains(pokemonName);
 
                 return ListView(
                   children: [
@@ -132,16 +135,16 @@ class _PokemonState extends State<Pokemon> {
                             ? () async {
                                 if (isFavorite) {
                                   await removePokemonV(pokemonName);
-                                  await removeUserV(mail, pokemonName);
+                                  await removeUserV(email, pokemonName);
                                 } else {
                                   await addPokemonV(pokemonName);
-                                  await addUserV(mail, pokemonName);
+                                  await addUserV(email, pokemonName);
                                 }
                               }
                             : null,
                         child: Text(isFavorite
-                            ? 'Quitar de favoritos (${favorites?.length})'
-                            : 'Añadir a favoritos (${favorites?.length})'),
+                            ? 'Quitar de favoritos (${favorites.length})'
+                            : 'Añadir a favoritos (${favorites.length})'),
                       ),
                     ),
                     Padding(
