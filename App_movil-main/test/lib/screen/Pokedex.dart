@@ -66,6 +66,7 @@ class _Pokedex extends State<Pokedex> {
                             builder: (context) => Pokemon(
                               name: pokemon["name"],
                               url: pokemon["url"],
+                              jwt: widget.jwt,
                             ),
                           ));
                     },

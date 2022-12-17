@@ -15,8 +15,8 @@ Future<List> getRank() async {
 }
 
 Future<void> addPokemonV(String name) async {
-  final voteRef = db.collection('rank').doc(name);
-  voteRef.update({"voto": FieldValue.increment(1)});
+  final voteRef =
+      db.collection('rank').doc(name).set({"voto": FieldValue.increment(1)});
 }
 
 Future<void> removePokemonV(String name) async {
@@ -33,14 +33,7 @@ Stream<Json> getUser(String mail) async* {
 }
 
 Future<void> addUserV(String mail, String pokemon) async {
-  final userRef = db.collection('user').doc(mail);
-  final user = await userRef.get();
-  final favorites = user.data()?["favorito"] as List;
-  if (favorites.length > 3) {
-    return;
-  }
-
-  userRef.update({
+  db.collection('user').doc(mail).update({
     "favorito": FieldValue.arrayUnion([pokemon])
   });
 }

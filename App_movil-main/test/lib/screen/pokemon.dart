@@ -9,8 +9,10 @@ typedef Accessor = Widget? Function(dynamic data);
 class Pokemon extends StatefulWidget {
   final String name;
   final String url;
+  final String jwt;
 
-  const Pokemon({super.key, required this.name, required this.url});
+  const Pokemon(
+      {super.key, required this.name, required this.url, required this.jwt});
 
   @override
   State<Pokemon> createState() => _PokemonState();
@@ -111,9 +113,9 @@ class _PokemonState extends State<Pokemon> {
 
                 final user = snapshot.data;
                 final pokemonName = pokemon["name"] as String;
-                final isFavorite =
-                    (user?["favorito"] as List?)?.contains(pokemonName) ??
-                        false;
+                final favorites = user?["favorito"] as List?;
+                final canFavorite = favorites != null && favorites.length < 3;
+                final isFavorite = favorites?.contains(pokemonName) ?? false;
 
                 return ListView(
                   children: [
@@ -126,18 +128,20 @@ class _PokemonState extends State<Pokemon> {
                     Container(
                       margin: const EdgeInsets.symmetric(vertical: 8.0),
                       child: TextButton(
-                        onPressed: () async {
-                          if (isFavorite) {
-                            await removePokemonV(pokemonName);
-                            await removeUserV(mail, pokemonName);
-                          } else {
-                            await addPokemonV(pokemonName);
-                            await addUserV(mail, pokemonName);
-                          }
-                        },
+                        onPressed: canFavorite || isFavorite
+                            ? () async {
+                                if (isFavorite) {
+                                  await removePokemonV(pokemonName);
+                                  await removeUserV(mail, pokemonName);
+                                } else {
+                                  await addPokemonV(pokemonName);
+                                  await addUserV(mail, pokemonName);
+                                }
+                              }
+                            : null,
                         child: Text(isFavorite
-                            ? 'Quitar de favoritos'
-                            : 'Añadir a favoritos'),
+                            ? 'Quitar de favoritos (${favorites?.length})'
+                            : 'Añadir a favoritos (${favorites?.length})'),
                       ),
                     ),
                     Padding(
