@@ -81,8 +81,8 @@ resultados del problema y como lo resolvieron.
 
 INTEGRANTES GRUPO COMP. PARALELA:
 
-Lukas Poffal Munita (lukas.poffalm@utem.cl)
-Martín Martínez Allende (martin.martineza@utem.cl)
-Alex Pino Moya (alex.pinom@utem.cl)
-Marcelo Silva Escala (marcelo.silvae@utem.cl)
+Lukas Poffal Munita (lukas.poffalm@utem.cl),
+Martín Martínez Allende (martin.martineza@utem.cl),
+Alex Pino Moya (alex.pinom@utem.cl),
+Marcelo Silva Escala (marcelo.silvae@utem.cl),
 Marcelo Tapia Riquelme (marcelo.tapiar@utem.cl)
